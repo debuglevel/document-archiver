@@ -12,31 +12,38 @@
       "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
     }
   }
+
 </script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 <div id="app">
+    <h1>Document Archiver</h1>
+    <p>
+        The following files were a) periodically scraped, b) downloaded from the Internet Archive Wayback Machine, c) crowd-funded.
+        Please use them only for research purpose.
+    </p>
+
     <div class="table-responsive">
         <table class="table-hover" v-if="documents">
             <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Filename</th>
-                    <th>Title</th>
-                    <th>Created On</th>
-<!--                    <th>URL</th>-->
-                    <!-- and so on -->
-                </tr>
+            <tr>
+                <th>Id</th>
+                <th>Filename</th>
+                <th>Title</th>
+                <th>Created On</th>
+                <!--                    <th>URL</th>-->
+                <!-- and so on -->
+            </tr>
             </thead>
             <tbody>
-                <tr v-for="(item, idx) in documents">
-                    <td>{{ item.id }}</td>
-                    <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
-                    <td>{{ item.title }}</td>
-                    <td>{{ item.created_on }}</td>
-<!--                    <td>{{ item.url }}></td>-->
-                    <!-- and so on -->
-                </tr>
+            <tr v-for="(item, idx) in documents">
+                <td>{{ item.id }}</td>
+                <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
+                <td>{{ item.title }}</td>
+                <td>{{ item.created_on }}</td>
+                <!--                    <td>{{ item.url }}></td>-->
+                <!-- and so on -->
+            </tr>
             </tbody>
         </table>
     </div>
@@ -61,6 +68,7 @@
           .catch(error => console.log(error))
     }
   }).mount('#app')
+
 </script>
 
 </body>
