@@ -1,4 +1,5 @@
 import os
+import pprint
 from typing import List
 import logging
 
@@ -13,14 +14,32 @@ from sqlalchemy.orm import Session
 from app.library import crud, models
 from app.library import schemas
 
+from waybackpy import WaybackMachineCDXServerAPI
+
 # URL = "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/"
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
+def wayback_run(db: Session, url: str, file_extension: str):
+    logger.debug(f"Fetching documents snapshots from Wayback Machine...")
+
+    user_agent = "Mozilla/5.0 (Windows NT 5.1; rv:40.0) Gecko/20100101 Firefox/40.0"
+    cdx = WaybackMachineCDXServerAPI(url, user_agent, start_timestamp="2000", end_timestamp="2030")
+    for item in cdx.snapshots():
+        logger.debug(f"Fetching documents snapshots from Wayback Machine at {item.datetime_timestamp}...")
+
+        documents = fetch_documents(item.archive_url, file_extension, item.datetime_timestamp)
+        update_documents(db, documents)
+
+        logger.debug(f"Fetched documents snapshots from Wayback Machine at {item.datetime_timestamp}")
+
+    logger.debug(f"Fetched documents snapshots from Wayback Machine")
+
+
 def run(db: Session, url: str, file_extension: str):
-    documents = fetch_documents(url, file_extension)
+    documents = fetch_documents(url, file_extension, datetime.now())
     update_documents(db, documents)
 
 
@@ -53,7 +72,7 @@ def update_documents(db: Session, documents: List[schemas.DocumentCreate]):
     logger.debug(f"Updated documents")
 
 
-def fetch_documents(url: str, file_extension: str) -> List[schemas.DocumentCreate]:
+def fetch_documents(url: str, file_extension: str, datetime_: datetime) -> List[schemas.DocumentCreate]:
     logger.debug(f"Fetching documents matching '*.{file_extension}' from {url} ...")
 
     documents: List[schemas.DocumentCreate] = []
@@ -68,7 +87,7 @@ def fetch_documents(url: str, file_extension: str) -> List[schemas.DocumentCreat
         link_url = urljoin(url, link['href'])
         data = requests.get(link_url).content
         data_sha512 = hashlib.sha512(data).hexdigest()
-        created_on = datetime.now()
+        created_on = datetime_
 
         document = schemas.DocumentCreate(
             created_on=created_on,
