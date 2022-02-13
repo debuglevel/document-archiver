@@ -85,7 +85,8 @@ def fetch_documents(url: str, file_extension: str, datetime_: datetime) -> List[
         filename = link['href'].split('/')[-1]
         title = link.text
         link_url = urljoin(url, link['href'])
-        data = requests.get(link_url).content
+        response = requests.get(link_url)
+        data = response.content
         data_sha512 = hashlib.sha512(data).hexdigest()
         created_on = datetime_
 
@@ -98,7 +99,11 @@ def fetch_documents(url: str, file_extension: str, datetime_: datetime) -> List[
             data_sha512=data_sha512,
         )
 
-        documents.append(document)
+        if response.status_code == 404:
+            logger.debug(f"{link_url} was a 404")
+            continue
+        else:
+            documents.append(document)
 
     logger.debug(f"Fetched {len(documents)} documents matching '*.{file_extension}' from {url}")
     return documents
