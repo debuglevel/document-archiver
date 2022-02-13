@@ -1,12 +1,12 @@
 #!/bin/usr/python3
 import logging.config
+import pprint
 from typing import Optional
 from fastapi import FastAPI
 
-import app.library.person
-from app.library import health
-from app.library.document_checker import get_all_documents, update_documents
-from app.rest.person import PersonIn, PersonOut
+
+from app.library import health, document_checker
+
 
 from typing import List
 
@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from fastapi_restful.session import FastAPISessionMaker
 from fastapi_restful.tasks import repeat_every
+
 
 from app.library import crud, models, schemas
 from app.library.database import SessionLocal, engine
@@ -48,50 +49,37 @@ async def get_health_async():
     return await health.get_health_async()
 
 
-@fastapi.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-# @fastapi.get("/greetings/{greeting_id}")
-# async def read_item(greeting_id: int, language: Optional[str] = None):
-#     return {"greeting_id": greeting_id, "language": language, "greeting": f"Say Hello to ID {greeting_id} in {language}"}
-#
-# @fastapi.post("/persons/", response_model=PersonOut)
-# async def post_person(input_person: PersonIn):
-#     person: app.library.person.Person = await app.library.person.create_person(input_person.name)
-#     return PersonOut(name=person.name, created_on=person.created_on)
-#
-# @fastapi.get("/persons/{name}", response_model=PersonOut)
-# async def get_person(name: str):
-#     person: app.library.person.Person = await app.library.person.get_person(name)
-#     return PersonOut(name=person.name, created_on=person.created_on)
-
-
-@fastapi.get("/documents/", response_model=List[schemas.Document])
-def read_documents(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@fastapi.get("/documents/", response_model=List[schemas.DocumentGet])
+def read_documents(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db)):
     documents = crud.get_documents(db, skip=skip, limit=limit)
     return documents
 
 
-@fastapi.get("/documents_/", response_model=List[schemas.Document])
-def read_documentsX(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    documents = get_all_documents("https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf")
-    update_documents(db, documents)
-
-
-@fastapi.get("/documents/{documents_id}", response_model=schemas.Document)
+@fastapi.get("/documents/{documents_id}", response_model=schemas.DocumentGet)
 def read_documents(documents_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_document(db, user_id=documents_id)
-    if db_user is None:
+    db_document = crud.get_document(db, user_id=documents_id)
+    if db_document is None:
         raise HTTPException(status_code=404, detail="Document not found")
-    return db_user
+    return db_document
+
+
+@fastapi.get("/documents_manual_trigger/", response_model=List[schemas.DocumentGet])
+def check_documents_manually(db: Session = Depends(get_db)):
+    document_checker.run(db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf")
 
 
 @fastapi.on_event("startup")
 @repeat_every(seconds=60)
-def check_for_new_documents() -> None:
-    logger.info("periodic thing...")
+def check_documents() -> None:
+    logger.debug("Periodically checking for changed documents...")
+
+    # TODO: Depends(db) does not work here.
+    # document_checker.run(db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf")
+
+    # TODO: Calling my own HTTP API instead.
+    from fastapi.testclient import TestClient
+    client = TestClient(fastapi)
+    client.get("/documents_manual_trigger")
 
 
 # def main():

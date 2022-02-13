@@ -19,7 +19,12 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-def update_documents(db: Session, documents: List[schemas.Document]):
+def run(db: Session, url: str, file_extension: str):
+    documents = fetch_documents(url, file_extension)
+    update_documents(db, documents)
+
+
+def update_documents(db: Session, documents: List[schemas.DocumentCreate]):
     logger.debug(f"Updating documents...")
 
     existing_documents = crud.get_documents(db)  # probably stupid, asking for all. should ask only for given.
@@ -48,34 +53,33 @@ def update_documents(db: Session, documents: List[schemas.Document]):
     logger.debug(f"Updated documents")
 
 
-def get_all_documents(root_url: str, file_extension: str) -> List[schemas.Document]:
-    logger.debug(f"Getting documents matching '*.{file_extension}' from {root_url} ...")
+def fetch_documents(url: str, file_extension: str) -> List[schemas.DocumentCreate]:
+    logger.debug(f"Fetching documents matching '*.{file_extension}' from {url} ...")
 
-    documents: List[schemas.Document] = []
+    documents: List[schemas.DocumentCreate] = []
 
-    response = requests.get(root_url)
+    response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
     for link in soup.select(f"a[href$='.{file_extension}']"):
         # name the pdf files using the last portion of the link
         filename = link['href'].split('/')[-1]
         title = link.text
-        url = urljoin(root_url, link['href'])
-        data = requests.get(url).content
+        link_url = urljoin(url, link['href'])
+        data = requests.get(link_url).content
         data_sha512 = hashlib.sha512(data).hexdigest()
         created_on = datetime.now()
 
-        document = schemas.Document(
-            id=-1,
+        document = schemas.DocumentCreate(
             created_on=created_on,
             title=title,
             filename=filename,
-            url=url,
+            url=link_url,
             data=data,
             data_sha512=data_sha512,
         )
 
         documents.append(document)
 
-    logger.debug(f"Got {len(documents)} documents matching '*.{file_extension}' from {root_url}")
+    logger.debug(f"Fetched {len(documents)} documents matching '*.{file_extension}' from {url}")
     return documents
