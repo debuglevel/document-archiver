@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Archiver</title>
+</head>
+<body>
+
+<script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+    }
+  }
+</script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<div id="app">
+    <div class="table-responsive">
+        <table class="table-hover" v-if="documents">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Filename</th>
+                    <th>Title</th>
+                    <th>Created On</th>
+<!--                    <th>URL</th>-->
+                    <!-- and so on -->
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item, idx) in documents">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.filename }}</td>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.created_on }}</td>
+<!--                    <td>{{ item.url }}></td>-->
+                    <!-- and so on -->
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script type="module">
+  import { createApp } from 'vue'
+
+  createApp({
+    data() {
+      return {
+        documents: []
+      }
+    },
+    mounted () {
+        axios
+          .get('../documents/')
+          .then(response => {this.documents = response.data})
+          .catch(error => console.log(error))
+    }
+  }).mount('#app')
+</script>
+
+</body>
+</html>

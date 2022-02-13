@@ -19,10 +19,13 @@ from fastapi_restful.tasks import repeat_every
 
 from app.library import crud, models, schemas
 from app.library.database import SessionLocal, engine
+from fastapi.staticfiles import StaticFiles
 
 models.Base.metadata.create_all(bind=engine)
 
 fastapi = FastAPI()
+fastapi.mount("/static", StaticFiles(directory="static", html = True), name="static")
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
