@@ -83,7 +83,7 @@ def check_documents_manually(db: Session = Depends(get_db)):
 
 
 @fastapi.get("/documents_manual_trigger_wayback/", response_model=List[schemas.DocumentGet])
-def check_documents_manually(db: Session = Depends(get_db)):
+def check_documents_manually_wayback(db: Session = Depends(get_db)):
     document_checker.wayback_run(db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf")
 
 
