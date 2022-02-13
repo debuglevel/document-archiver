@@ -20,6 +20,8 @@ from fastapi_restful.tasks import repeat_every
 from app.library import crud, models, schemas
 from app.library.database import SessionLocal, engine
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi import APIRouter, Response
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -64,6 +66,15 @@ def read_documents(documents_id: int, db: Session = Depends(get_db)):
     if db_document is None:
         raise HTTPException(status_code=404, detail="Document not found")
     return db_document
+
+
+@fastapi.get("/documents_download/{documents_id}")
+def read_documents(documents_id: int, db: Session = Depends(get_db)):
+    db_document: models.Document = crud.get_document(db, user_id=documents_id)
+    if db_document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    return Response(content=db_document.data, media_type='application/pdf')
 
 
 @fastapi.get("/documents_manual_trigger/", response_model=List[schemas.DocumentGet])
