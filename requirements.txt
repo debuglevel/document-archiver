@@ -12,6 +12,10 @@ fastapi-restful==0.4.3
 # Persistence
 tinydb==4.4.0
 #mysql-connector-python==8.0.22
+FastAPI-SQLAlchemy==0.2.1
 
 # Retry
 #tenacity==6.2.0
+
+beautifulsoup4==4.10.0
+requests==2.27.1
