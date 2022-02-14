@@ -29,7 +29,7 @@
     </p>
 
     <div class="table-responsive">
-        <table class="table-hover" v-if="documents">
+        <table class="table-hover" v-if="sortedDocuments">
             <thead>
             <tr>
                 <th>Filename</th>
@@ -38,10 +38,11 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(item, idx) in documents">
+            <tr v-for="(item, idx) in sortedDocuments">
                 <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
                 <td>{{ item.title }}</td>
                 <td>{{ item.pdf_creation_datetime }}</td>
+                <td>{{item.id}}</td>
             </tr>
             </tbody>
         </table>
@@ -62,6 +63,13 @@
           .get('../documents/')
           .then(response => {this.documents = response.data})
           .catch(error => console.log(error))
+    },
+    computed: {
+      sortedDocuments: function() {
+         return this.documents.sort(function(a, b) {
+            return (new Date(b["pdf_creation_datetime"])).getTime() - (new Date(a["pdf_creation_datetime"])).getTime();
+         });
+      }
     }
   }).mount('#app')
 </script>
