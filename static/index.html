@@ -32,7 +32,6 @@
         <table class="table-hover" v-if="documents">
             <thead>
             <tr>
-                <th>Id</th>
                 <th>Filename</th>
                 <th>Title</th>
                 <th>Created on</th>
@@ -40,7 +39,6 @@
             </thead>
             <tbody>
             <tr v-for="(item, idx) in documents">
-                <td>{{ item.id }}</td>
                 <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
                 <td>{{ item.title }}</td>
                 <td>{{ item.pdf_creation_datetime }}</td>
