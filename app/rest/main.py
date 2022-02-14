@@ -94,7 +94,7 @@ def check_documents_manually_wayback(db: Session = Depends(get_db)):
 
 
 @fastapi.on_event("startup")
-@repeat_every(seconds=60)
+@repeat_every(seconds=60*60)
 def check_documents() -> None:
     logger.debug("Periodically checking for changed documents...")
 
