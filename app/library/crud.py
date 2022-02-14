@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import List
 
 from sqlalchemy.orm import Session
@@ -11,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 def create_document(db: Session, document: schemas.DocumentCreate):
     db_document = models.Document(
-        created_on=document.created_on,
+        created_on=datetime.now(),
+        pdf_creation_datetime=document.pdf_creation_datetime,
         title=document.title,
         filename=document.filename,
         url=document.url,

@@ -1,16 +1,10 @@
 import datetime
 import io
+import pprint
 import re
 from dateutil.tz import tzutc, tzoffset
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfparser import PDFParser
-
-
-# def get_datetime_from_pdf_bytes(pdf_bytes: bytes):
-#     with io.BytesIO(pdf_bytes) as file:
-#         pdf = PyPDF2.PdfFileReader(file)
-#         info = pdf.getDocumentInfo()
-#         transform_date
 
 
 def get_datetime(pdf_bytes: bytes) -> datetime:
@@ -18,8 +12,9 @@ def get_datetime(pdf_bytes: bytes) -> datetime:
         pdf_parser = PDFParser(file)
         pdf_document = PDFDocument(pdf_parser)
 
-        creation_datetime_raw = pdf_document.info[0]['CreationDate']  # "D:20130501200439+01'00'"
-        return transform_datetime(creation_datetime_raw)
+        creation_datetime_bytes = pdf_document.info[0]['CreationDate']  # b"D:20130501200439+01'00'"
+        creation_datetime_string = creation_datetime_bytes.decode("utf-8")
+        return transform_datetime(creation_datetime_string)
 
 
 def transform_datetime(datetime_str: str) -> datetime:
@@ -47,7 +42,7 @@ def transform_datetime(datetime_str: str) -> datetime:
     if match:
         date_info = match.groupdict()
 
-        for k, v in date_info.iteritems():  # transform values
+        for k, v in date_info.items():  # transform values
             if v is None:
                 pass
             elif k == 'tz_offset':

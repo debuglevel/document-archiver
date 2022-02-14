@@ -1,20 +1,15 @@
-import os
-import pprint
-from typing import List
+import hashlib
 import logging
+from typing import List
+from urllib.parse import urljoin
 
 import requests
-from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-import hashlib
-from datetime import datetime
-
 from sqlalchemy.orm import Session
-
-from app.library import crud, models
-from app.library import schemas
-
 from waybackpy import WaybackMachineCDXServerAPI
+
+from app.library import crud, models, pdf_reader
+from app.library import schemas
 
 # URL = "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/"
 
@@ -34,9 +29,7 @@ def wayback_run(db: Session, url: str, file_extension: str):
             f"Fetching documents snapshots from Wayback Machine at {item.datetime_timestamp}..."
         )
 
-        documents = fetch_documents(
-            item.archive_url, file_extension, item.datetime_timestamp
-        )
+        documents = fetch_documents(item.archive_url, file_extension)
         update_documents(db, documents)
 
         logger.debug(
@@ -47,7 +40,7 @@ def wayback_run(db: Session, url: str, file_extension: str):
 
 
 def run(db: Session, url: str, file_extension: str):
-    documents = fetch_documents(url, file_extension, datetime.now())
+    documents = fetch_documents(url, file_extension)
     update_documents(db, documents)
 
 
@@ -68,7 +61,7 @@ def update_documents(db: Session, documents: List[schemas.DocumentCreate]):
         if not already_existing:
             logger.debug(f"Document not existing; adding...")
             crud_document = models.Document(
-                created_on=document.created_on,
+                pdf_creation_datetime=document.pdf_creation_datetime,
                 title=document.title,
                 filename=document.filename,
                 url=document.url,
@@ -83,7 +76,7 @@ def update_documents(db: Session, documents: List[schemas.DocumentCreate]):
 
 
 def fetch_documents(
-    url: str, file_extension: str, datetime_: datetime
+        url: str, file_extension: str
 ) -> List[schemas.DocumentCreate]:
     logger.debug(f"Fetching documents matching '*.{file_extension}' from {url} ...")
 
@@ -93,17 +86,22 @@ def fetch_documents(
     soup = BeautifulSoup(response.text, "html.parser")
 
     for link in soup.select(f"a[href$='.{file_extension}']"):
+        link_url = urljoin(url, link["href"])
+        response = requests.get(link_url)
+
+        if response.status_code == 404:
+            logger.debug(f"{link_url} was a 404")
+            continue
+
         # name the pdf files using the last portion of the link
         filename = link["href"].split("/")[-1]
         title = link.text
-        link_url = urljoin(url, link["href"])
-        response = requests.get(link_url)
         data = response.content
         data_sha512 = hashlib.sha512(data).hexdigest()
-        created_on = datetime_
+        pdf_creation_datetime = pdf_reader.get_datetime(data)
 
         document = schemas.DocumentCreate(
-            created_on=created_on,
+            pdf_creation_datetime=pdf_creation_datetime,
             title=title,
             filename=filename,
             url=link_url,
@@ -111,11 +109,7 @@ def fetch_documents(
             data_sha512=data_sha512,
         )
 
-        if response.status_code == 404:
-            logger.debug(f"{link_url} was a 404")
-            continue
-        else:
-            documents.append(document)
+        documents.append(document)
 
     logger.debug(
         f"Fetched {len(documents)} documents matching '*.{file_extension}' from {url}"

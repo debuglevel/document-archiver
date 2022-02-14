@@ -17,6 +17,7 @@ class Document(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     created_on = Column(DateTime, index=False)
+    pdf_creation_datetime = Column(DateTime, index=False)
     title = Column(String, index=False)
     filename = Column(String, index=False)
     url = Column(String, index=False)

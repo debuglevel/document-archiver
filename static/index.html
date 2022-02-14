@@ -30,7 +30,7 @@
                 <th>Id</th>
                 <th>Filename</th>
                 <th>Title</th>
-                <th>Created On</th>
+                <th>Created on</th>
             </tr>
             </thead>
             <tbody>
@@ -38,7 +38,7 @@
                 <td>{{ item.id }}</td>
                 <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
                 <td>{{ item.title }}</td>
-                <td>{{ item.created_on }}</td>
+                <td>{{ item.pdf_creation_datetime }}</td>
             </tr>
             </tbody>
         </table>

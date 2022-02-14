@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class DocumentBase(BaseModel):
-    created_on: datetime
+    pdf_creation_datetime: datetime
     title: str
     filename: str
     url: str
@@ -19,6 +19,7 @@ class DocumentCreate(DocumentBase):
 
 class DocumentGet(DocumentBase):
     id: int
+    created_on: datetime
 
     class Config:
         orm_mode = True
