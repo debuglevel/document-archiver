@@ -27,6 +27,8 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 # /app/app looks ugly, but preserves the "app" module folder
 COPY app/ /app/app/
+COPY static/ /app/static/
+
 
 # switch to unprivileged user for following commands
 USER appuser
