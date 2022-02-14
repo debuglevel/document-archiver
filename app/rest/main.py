@@ -26,7 +26,7 @@ from fastapi import APIRouter, Response
 models.Base.metadata.create_all(bind=engine)
 
 fastapi = FastAPI()
-fastapi.mount("/static", StaticFiles(directory="static", html = True), name="static")
+fastapi.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -74,17 +74,23 @@ def read_documents(documents_id: int, db: Session = Depends(get_db)):
     if db_document is None:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    return Response(content=db_document.data, media_type='application/pdf')
+    return Response(content=db_document.data, media_type="application/pdf")
 
 
 @fastapi.get("/documents_manual_trigger/", response_model=List[schemas.DocumentGet])
 def check_documents_manually(db: Session = Depends(get_db)):
-    document_checker.run(db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf")
+    document_checker.run(
+        db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf"
+    )
 
 
-@fastapi.get("/documents_manual_trigger_wayback/", response_model=List[schemas.DocumentGet])
+@fastapi.get(
+    "/documents_manual_trigger_wayback/", response_model=List[schemas.DocumentGet]
+)
 def check_documents_manually_wayback(db: Session = Depends(get_db)):
-    document_checker.wayback_run(db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf")
+    document_checker.wayback_run(
+        db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf"
+    )
 
 
 @fastapi.on_event("startup")
@@ -97,6 +103,7 @@ def check_documents() -> None:
 
     # TODO: Calling my own HTTP API instead.
     from fastapi.testclient import TestClient
+
     client = TestClient(fastapi)
     client.get("/documents_manual_trigger")
 
@@ -122,7 +129,10 @@ def check_documents() -> None:
 def main():
     import uvicorn
     import yaml
-    logging.config.dictConfig(yaml.load(open("app/logging-config.yaml", 'r')))  # configured via cmdline
+
+    logging.config.dictConfig(
+        yaml.load(open("app/logging-config.yaml", "r"))
+    )  # configured via cmdline
     logger.info("Starting via main()...")
     uvicorn.run(fastapi, host="0.0.0.0", port=8080)
 
@@ -130,10 +140,6 @@ def main():
 # This only runs if the script is called instead of uvicorn; should probably not be used.
 if __name__ == "__main__":
     main()
-
-
-
-
 
 
 # from typing import List
@@ -149,17 +155,12 @@ if __name__ == "__main__":
 # app = FastAPI()
 
 
-
-
-
 # @app.post("/users/", response_model=schemas.User)
 # def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 #     db_user = crud.get_user_by_email(db, email=user.email)
 #     if db_user:
 #         raise HTTPException(status_code=400, detail="Email already registered")
 #     return crud.create_user(db=db, user=user)
-
-
 
 
 #

@@ -28,7 +28,9 @@ def get_document(db: Session, user_id: int):
     return db.query(models.Document).filter(models.Document.id == user_id).first()
 
 
-def get_documents(db: Session, skip: int = 0, limit: int = 1000) -> List[models.Document]:
+def get_documents(
+    db: Session, skip: int = 0, limit: int = 1000
+) -> List[models.Document]:
     logger.debug(f"Getting documents...")
     documents = db.query(models.Document).offset(skip).limit(limit).all()
     logger.debug(f"Got documents")

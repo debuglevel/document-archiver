@@ -1,4 +1,12 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, LargeBinary, DateTime
+from sqlalchemy import (
+    Boolean,
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    LargeBinary,
+    DateTime,
+)
 from sqlalchemy.orm import relationship
 
 from .database import Base
