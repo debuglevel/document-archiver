@@ -2,21 +2,19 @@ ARG PYTHON_VERSION=3.9.6
 ARG ALPINE_VERSION=3.14
 
 ## Final image
-#FROM python:$PYTHON_VERSION-slim-buster
-FROM python:$PYTHON_VERSION-alpine$ALPINE_VERSION as runtime
+FROM python:$PYTHON_VERSION-slim-buster
+#FROM python:$PYTHON_VERSION-alpine$ALPINE_VERSION as runtime
 
 ENV PYTHONUNBUFFERED 1
 
 # add a group and an user with specified IDs
-RUN addgroup -S -g 1111 appgroup && adduser -S -G appgroup -u 1111 appuser
-#RUN groupadd -r -g 1111 appgroup && useradd -r -g appgroup -u 1111 --no-log-init appuser # if based on Debian/Ubuntu
+#RUN addgroup -S -g 1111 appgroup && adduser -S -G appgroup -u 1111 appuser
+RUN groupadd -r -g 1111 appgroup && useradd -r -g appgroup -u 1111 --no-log-init appuser # if based on Debian/Ubuntu
 
 # add curl for health check
-RUN apk add --no-cache curl
-#RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* # if based on Debian/Ubuntu
-
-# maybe required by pip if something needs to be compiled
-RUN apk add gcc musl-dev linux-headers
+#RUN apk add --no-cache curl
+# if based on Debian/Ubuntu
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # add /data directory with correct rights
 RUN mkdir /data && chown 1111:1111 /data
