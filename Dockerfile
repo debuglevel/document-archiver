@@ -15,6 +15,9 @@ RUN addgroup -S -g 1111 appgroup && adduser -S -G appgroup -u 1111 appuser
 RUN apk add --no-cache curl
 #RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* # if based on Debian/Ubuntu
 
+# maybe requied by pip if something needs to be compiled
+RUN apk add gcc musl-dev linux-headers
+
 # add /data directory with correct rights
 RUN mkdir /data && chown 1111:1111 /data
 
@@ -24,6 +27,8 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 # /app/app looks ugly, but preserves the "app" module folder
 COPY app/ /app/app/
+COPY static/ /app/static/
+
 
 # switch to unprivileged user for following commands
 USER appuser
@@ -35,7 +40,7 @@ EXPOSE 8080
 ## use a log appender with no timestamps as Docker logs the timestamp itself ("docker logs -t ID")
 #ENV LOG_APPENDER classic-stdout
 
-HEALTHCHECK --interval=5m --timeout=5s --retries=3 --start-period=1m CMD curl --fail http://localhost/health || exit 1
+HEALTHCHECK --interval=5m --timeout=5s --retries=3 --start-period=1m CMD curl --fail http://localhost:8080/health || exit 1
 
 CMD ["uvicorn", "--host=0.0.0.0", "app.rest.main:fastapi", "--port=8080", "--log-config=app/logging-config.yaml"]
 
