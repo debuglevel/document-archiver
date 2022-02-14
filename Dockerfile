@@ -40,7 +40,7 @@ EXPOSE 8080
 ## use a log appender with no timestamps as Docker logs the timestamp itself ("docker logs -t ID")
 #ENV LOG_APPENDER classic-stdout
 
-HEALTHCHECK --interval=5m --timeout=5s --retries=3 --start-period=1m CMD curl --fail http://localhost/health || exit 1
+HEALTHCHECK --interval=5m --timeout=5s --retries=3 --start-period=1m CMD curl --fail http://localhost:8080/health || exit 1
 
 CMD ["uvicorn", "--host=0.0.0.0", "app.rest.main:fastapi", "--port=8080", "--log-config=app/logging-config.yaml"]
 
