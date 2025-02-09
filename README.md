@@ -4,6 +4,7 @@ This is a very quick and dirty hack.
 Do not expect anything.
 The source if aweful.
 
+And it seems that I've somehow hardcoded it to run only with docker. :)
 
 
 Python microservice template, inspired by my Kotlin based microservice
