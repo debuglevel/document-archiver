@@ -5,26 +5,36 @@ import re
 from dateutil.tz import tzutc, tzoffset
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfparser import PDFParser
+import logging
 
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def get_datetime(pdf_bytes: bytes) -> datetime:
+    logger.debug("Getting datetime from PDF...")
+
     with io.BytesIO(pdf_bytes) as file:
         pdf_parser = PDFParser(file)
         pdf_document = PDFDocument(pdf_parser)
 
         creation_datetime_bytes = pdf_document.info[0]['CreationDate']  # b"D:20130501200439+01'00'"
         creation_datetime_string = creation_datetime_bytes.decode("utf-8")
-        return transform_datetime(creation_datetime_string)
+        datetime1 = transform_datetime(creation_datetime_string)
+
+        logger.debug(f"Got datetime from PDF: {pprint.pformat(datetime1)}")
+        return datetime1
 
 
 def transform_datetime(datetime_str: str) -> datetime:
     """
-    Convert a pdf date such as "D:20120321183444+07'00'" into a usable datetime
+    Converts a pdf date such as "D:20120321183444+07'00'" into a usable datetime
     http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
     (D:YYYYMMDDHHmmSSOHH'mm')
     :param datetime_str: pdf date string
     :return: datetime object
     """
+    logger.debug(f"Transforming datetime {datetime_str}...")
 
     pdf_date_pattern = re.compile(''.join([
         r"(D:)?",
@@ -59,4 +69,7 @@ def transform_datetime(datetime_str: str) -> datetime:
         for k in ('tz_offset', 'tz_hour', 'tz_minute'):  # no longer needed
             del date_info[k]
 
-        return datetime.datetime(**date_info)
+        datetime_datetime = datetime.datetime(**date_info)
+
+        logger.debug(f"Transformed datetime {datetime_str} to {datetime_datetime}.")
+        return datetime_datetime

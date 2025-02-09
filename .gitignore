@@ -1,4 +1,5 @@
 venv
+database.sqlite
 
 ### VirtualEnv template
 # Virtualenv

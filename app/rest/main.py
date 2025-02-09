@@ -1,45 +1,39 @@
 #!/bin/usr/python3
 import logging.config
-import pprint
-from typing import Optional
-from fastapi import FastAPI
-
-
-from app.library import health, document_checker
-
-
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Response
+from fastapi.staticfiles import StaticFiles
+from fastapi_restful.tasks import repeat_every
 from sqlalchemy.orm import Session
 
-from fastapi_restful.session import FastAPISessionMaker
-from fastapi_restful.tasks import repeat_every
-
-
 from app.library import crud, models, schemas
+from app.library import health, document_checker
 from app.library.database import SessionLocal, engine
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from fastapi import APIRouter, Response
+import uvicorn
+import yaml
+
+SCRAPE_URL = "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/"
 
 models.Base.metadata.create_all(bind=engine)
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 fastapi = FastAPI()
 fastapi.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-
 # Dependency
-def get_db():
-    db = SessionLocal()
+def get_database():
+    logger.debug("Getting database...")
+    database = SessionLocal()
     try:
-        yield db
+        yield database
     finally:
-        db.close()
+        logger.debug("Closing database...")
+        database.close()
 
 
 @fastapi.get("/health")
@@ -55,70 +49,66 @@ async def get_health_async():
 
 
 @fastapi.get("/documents/", response_model=List[schemas.DocumentGet])
-def read_documents(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db)):
+def read_documents(skip: int = 0, limit: int = 1000, database: Session = Depends(get_database)):
     logger.debug("Received GET request on /documents")
-    documents = crud.get_documents(db, skip=skip, limit=limit)
+    documents = crud.get_documents(database, skip=skip, limit=limit)
     return documents
 
 
-@fastapi.get("/documents/{documents_id}", response_model=schemas.DocumentGet)
-def read_documents(documents_id: int, db: Session = Depends(get_db)):
-    logger.debug(f"Received GET request on /documents/{documents_id}")
-    db_document = crud.get_document(db, user_id=documents_id)
-    if db_document is None:
+@fastapi.get("/documents/{document_id}", response_model=schemas.DocumentGet)
+def read_documents(document_id: int, database: Session = Depends(get_database)):
+    logger.debug(f"Received GET request on /documents/{document_id}")
+
+    database_document = crud.get_document(database, document_id=document_id)
+
+    if database_document is None:
+        logger.warning(f"Document with ID {document_id} not found.")
         raise HTTPException(status_code=404, detail="Document not found")
-    return db_document
+
+    return database_document
 
 
 @fastapi.get("/documents_download/{documents_id}")
-def read_documents(documents_id: int, db: Session = Depends(get_db)):
-    logger.debug(f"Received GET request on /documents_download/{documents_id}")
-    db_document: models.Document = crud.get_document(db, user_id=documents_id)
-    if db_document is None:
+def read_documents(document_id: int, database: Session = Depends(get_database)):
+    logger.debug(f"Received GET request on /documents_download/{document_id}")
+
+    database_document: models.Document = crud.get_document(database, document_id=document_id)
+
+    if database_document is None:
+        logger.warning(f"Document with ID {document_id} not found.")
         raise HTTPException(status_code=404, detail="Document not found")
 
-    return Response(content=db_document.data, media_type="application/pdf")
+    return Response(content=database_document.data, media_type="application/pdf")
 
 
 @fastapi.get("/documents_manual_trigger/", response_model=List[schemas.DocumentGet])
-def check_documents_manually(db: Session = Depends(get_db)):
+def check_documents_manually(database: Session = Depends(get_database)):
     logger.debug(f"Received GET request on /documents_manual_trigger/")
-    document_checker.run(
-        db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf"
-    )
+
+    document_checker.run(database, SCRAPE_URL, "pdf")
 
 
-@fastapi.get(
-    "/documents_manual_trigger_wayback/", response_model=List[schemas.DocumentGet]
-)
-def check_documents_manually_wayback(db: Session = Depends(get_db)):
+@fastapi.get("/documents_manual_trigger_wayback/", response_model=List[schemas.DocumentGet])
+def check_documents_manually_wayback(database: Session = Depends(get_database)):
     logger.debug(f"Received GET request on /documents_manual_trigger_wayback/")
-    document_checker.wayback_run(
-        db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf"
-    )
+
+    document_checker.wayback_run(database, SCRAPE_URL, "pdf")
 
 
 @fastapi.on_event("startup")
-@repeat_every(seconds=60*60)
+@repeat_every(seconds=60 * 60)
 def check_documents() -> None:
     logger.debug("Periodically checking for changed documents...")
 
-    # TODO: Depends(db) does not work here.
-    # document_checker.run(db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf")
-
     # TODO: Calling my own HTTP API instead.
     from fastapi.testclient import TestClient
-
     client = TestClient(fastapi)
     client.get("/documents_manual_trigger")
 
 
 def main():
-    import uvicorn
-    import yaml
-
     logging.config.dictConfig(
-        yaml.load(open("app/logging-config.yaml", "r"))
+        yaml.safe_load(open("app/logging-config.yaml", "r"))
     )  # configured via cmdline
 
     logger.info("Starting via main()...")

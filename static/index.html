@@ -21,40 +21,38 @@
 </script>
 <script src="https://unpkg.com/axios@1.7.9/dist/axios.min.js"></script>
 
-<div id="app" class="container my-5">
+<div id="app" class="m-3">
     <h1>Document Archiver</h1>
 
-    <div class="col-lg-8 px-0">
-        <p class="fs-5">
-            This is an archive of whatever files this instance of document archiver was configured for.
-        </p>
-        <p>
-            The archived files were periodically scraped, downloaded from the Internet Archive Wayback Machine and
-            possibly crowd-funded.
-        </p>
-        <p>
-            Please use them only for research purposes.
-        </p>
+    <p class="fs-5">
+        This is an archive of whatever files this instance of document archiver was configured for.
+    </p>
+    <p>
+        The archived files were periodically scraped, downloaded from the Internet Archive Wayback Machine and
+        possibly crowd-funded.
+    </p>
+    <p>
+        Please use them only for research purposes.
+    </p>
 
-        <div class="table-responsive">
-            <table class="table-hover" v-if="sortedDocuments">
-                <thead>
-                <tr>
-                    <th>Filename</th>
-                    <th>Title</th>
-                    <th>Created on</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="(item, idx) in sortedDocuments">
-                    <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
-                    <td>{{ item.title }}</td>
-                    <td>{{ item.pdf_creation_datetime }}</td>
-                    <!-- <td>{{item.id}}</td> -->
-                </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table-hover" v-if="sortedDocuments">
+            <thead>
+            <tr>
+                <th>File name</th>
+                <th>Title</th>
+                <th>Created on</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(item, idx) in sortedDocuments">
+                <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
+                <td>{{ item.title }}</td>
+                <td>{{ item.pdf_creation_datetime }}</td>
+                <!-- <td>{{item.id}}</td> -->
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 

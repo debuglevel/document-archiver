@@ -40,6 +40,8 @@ EXPOSE 8080
 
 HEALTHCHECK --interval=5m --timeout=5s --retries=3 --start-period=1m CMD curl --fail http://localhost:8080/health || exit 1
 
+ENV SQLALCHEMY_DATABASE_URL=sqlite:////data/database.sqlite
+
 CMD ["uvicorn", "--host=0.0.0.0", "app.rest.main:fastapi", "--port=8080", "--log-config=app/logging-config.yaml"]
 
 ###############

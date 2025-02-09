@@ -11,55 +11,50 @@ from waybackpy import WaybackMachineCDXServerAPI
 from app.library import crud, models, pdf_reader
 from app.library import schemas
 
-# URL = "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/"
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-def wayback_run(db: Session, url: str, file_extension: str):
+def wayback_run(database: Session, url: str, file_extension: str):
     logger.debug(f"Fetching documents snapshots from Wayback Machine...")
 
     user_agent = "Mozilla/5.0 (Windows NT 5.1; rv:40.0) Gecko/20100101 Firefox/40.0"
-    cdx = WaybackMachineCDXServerAPI(
-        url, user_agent, start_timestamp="2000", end_timestamp="2030"
-    )
+    cdx = WaybackMachineCDXServerAPI(url, user_agent, start_timestamp="2000", end_timestamp="2030")
     for item in cdx.snapshots():
-        logger.debug(
-            f"Fetching documents snapshots from Wayback Machine at {item.datetime_timestamp}..."
-        )
+        logger.debug(f"Fetching documents snapshots from Wayback Machine at {item.datetime_timestamp}...")
 
         documents = fetch_documents(item.archive_url, file_extension)
-        update_documents(db, documents)
+        update_documents(database, documents)
 
-        logger.debug(
-            f"Fetched documents snapshots from Wayback Machine at {item.datetime_timestamp}"
-        )
+        logger.debug(f"Fetched documents snapshots from Wayback Machine at {item.datetime_timestamp}.")
 
-    logger.debug(f"Fetched documents snapshots from Wayback Machine")
+    logger.debug(f"Fetched documents snapshots from Wayback Machine.")
 
 
-def run(db: Session, url: str, file_extension: str):
+def run(database: Session, url: str, file_extension: str):
     logger.debug(f"Run on {url} with extension {file_extension}...")
+
     documents = fetch_documents(url, file_extension)
-    update_documents(db, documents)
+    update_documents(database, documents)
+
     logger.debug(f"Ran on {url} with extension {file_extension}.")
 
 
-def update_documents(db: Session, documents: List[schemas.DocumentCreate]):
+def update_documents(database: Session, documents: List[schemas.DocumentCreate]):
     logger.debug(f"Updating documents...")
 
-    existing_documents = crud.get_documents(
-        db
-    )  # probably stupid, asking for all. should ask only for given.
+    # It's probably stupid to ask for all. Should ask only for given.
+    existing_documents = crud.get_documents(database)
 
     for document in documents:
-        logger.debug(f"Searching for document with SHA512 {document.data_sha512}")
+        logger.debug(f"Searching for document with SHA512 {document.data_sha512}...")
         already_existing = False
+
         for existing_document in existing_documents:
             if existing_document.data_sha512 == document.data_sha512:
-                logger.debug(f"Found document with SHA512 {document.data_sha512}")
+                logger.debug(f"Found document with SHA512 {document.data_sha512}.")
                 already_existing = True
+
         if not already_existing:
             logger.debug(f"Document not existing; adding...")
             crud_document = models.Document(
@@ -70,17 +65,15 @@ def update_documents(db: Session, documents: List[schemas.DocumentCreate]):
                 data=document.data,
                 data_sha512=document.data_sha512,
             )
-            crud.create_document(db, crud_document)
+            crud.create_document(database, crud_document)
         else:
-            logger.debug(f"Document already existing")
+            logger.debug(f"Document already exists.")
 
-    logger.debug(f"Updated documents")
+    logger.debug(f"Updated documents.")
 
 
-def fetch_documents(
-        url: str, file_extension: str
-) -> List[schemas.DocumentCreate]:
-    logger.debug(f"Fetching documents matching '*.{file_extension}' from {url} ...")
+def fetch_documents(url: str, file_extension: str) -> List[schemas.DocumentCreate]:
+    logger.debug(f"Fetching documents matching '*.{file_extension}' from {url}...")
 
     documents: List[schemas.DocumentCreate] = []
 
@@ -92,7 +85,7 @@ def fetch_documents(
         response = requests.get(link_url)
 
         if response.status_code == 404:
-            logger.debug(f"{link_url} was a 404")
+            logger.debug(f"{link_url} was a 404.")
             continue
 
         # name the pdf files using the last portion of the link
@@ -113,7 +106,5 @@ def fetch_documents(
 
         documents.append(document)
 
-    logger.debug(
-        f"Fetched {len(documents)} documents matching '*.{file_extension}' from {url}"
-    )
+    logger.debug(f"Fetched {len(documents)} documents matching '*.{file_extension}' from {url}.")
     return documents
