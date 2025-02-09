@@ -52,6 +52,13 @@ handlers:
 #       - console
 #     #propagate: ??? # optional
 
+loggers:
+  pdfminer:
+    level: WARNING  # Prevent DEBUG and INFO logs from pdfminer from being shown
+    handlers: 
+      - console
+    propagate: no  # Do not propagate up to root logger
+
 # Configuration for the root logger.
 # Processing is as for any logger, except that the propagate setting will not be applicable.
 # All loggers are descendants of the root logger. Each logger passes log messages on to its parent (as long as propagate=True in the respective loggers; e.g. "foo.bar" -> "foo" -> root). So configuring the root logger is often sufficient if no module should be treated specially.
