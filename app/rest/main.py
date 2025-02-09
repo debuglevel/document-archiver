@@ -56,12 +56,14 @@ async def get_health_async():
 
 @fastapi.get("/documents/", response_model=List[schemas.DocumentGet])
 def read_documents(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db)):
+    logger.debug("Received GET request on /documents")
     documents = crud.get_documents(db, skip=skip, limit=limit)
     return documents
 
 
 @fastapi.get("/documents/{documents_id}", response_model=schemas.DocumentGet)
 def read_documents(documents_id: int, db: Session = Depends(get_db)):
+    logger.debug(f"Received GET request on /documents/{documents_id}")
     db_document = crud.get_document(db, user_id=documents_id)
     if db_document is None:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -70,6 +72,7 @@ def read_documents(documents_id: int, db: Session = Depends(get_db)):
 
 @fastapi.get("/documents_download/{documents_id}")
 def read_documents(documents_id: int, db: Session = Depends(get_db)):
+    logger.debug(f"Received GET request on /documents_download/{documents_id}")
     db_document: models.Document = crud.get_document(db, user_id=documents_id)
     if db_document is None:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -79,6 +82,7 @@ def read_documents(documents_id: int, db: Session = Depends(get_db)):
 
 @fastapi.get("/documents_manual_trigger/", response_model=List[schemas.DocumentGet])
 def check_documents_manually(db: Session = Depends(get_db)):
+    logger.debug(f"Received GET request on /documents_manual_trigger/")
     document_checker.run(
         db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf"
     )
@@ -88,6 +92,7 @@ def check_documents_manually(db: Session = Depends(get_db)):
     "/documents_manual_trigger_wayback/", response_model=List[schemas.DocumentGet]
 )
 def check_documents_manually_wayback(db: Session = Depends(get_db)):
+    logger.debug(f"Received GET request on /documents_manual_trigger_wayback/")
     document_checker.wayback_run(
         db, "https://www.uni-bamberg.de/pruefungsamt/pruefungstermine/", "pdf"
     )
@@ -108,24 +113,6 @@ def check_documents() -> None:
     client.get("/documents_manual_trigger")
 
 
-# def main():
-#     logger.info("Starting...")
-#
-#     # sleeptime = int(os.environ['SLEEP_INTERVAL'])
-#
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--some-host", help="some host", type=str, default="localhost")
-#     parser.add_argument("--some-port", help="some port", type=int, default=8080)
-#     args = parser.parse_args()
-#     # args.some_port
-#     # args.some_host
-#
-#     uvicorn.run(fastapi, host="0.0.0.0", port=8080)
-#
-#
-#
-
-
 def main():
     import uvicorn
     import yaml
@@ -133,45 +120,12 @@ def main():
     logging.config.dictConfig(
         yaml.load(open("app/logging-config.yaml", "r"))
     )  # configured via cmdline
+
     logger.info("Starting via main()...")
+
     uvicorn.run(fastapi, host="0.0.0.0", port=8080)
 
 
 # This only runs if the script is called instead of uvicorn; should probably not be used.
 if __name__ == "__main__":
     main()
-
-
-# from typing import List
-#
-# from fastapi import Depends, FastAPI, HTTPException
-# from sqlalchemy.orm import Session
-#
-# from . import crud, models, schemas
-# from .database import SessionLocal, engine
-#
-# models.Base.metadata.create_all(bind=engine)
-#
-# app = FastAPI()
-
-
-# @app.post("/users/", response_model=schemas.User)
-# def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-#     db_user = crud.get_user_by_email(db, email=user.email)
-#     if db_user:
-#         raise HTTPException(status_code=400, detail="Email already registered")
-#     return crud.create_user(db=db, user=user)
-
-
-#
-# @app.post("/users/{user_id}/items/", response_model=schemas.Item)
-# def create_item_for_user(
-#     user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)
-# ):
-#     return crud.create_user_item(db=db, item=item, user_id=user_id)
-#
-#
-# @app.get("/items/", response_model=List[schemas.Item])
-# def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     items = crud.get_items(db, skip=skip, limit=limit)
-#     return items

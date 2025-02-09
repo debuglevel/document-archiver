@@ -40,8 +40,10 @@ def wayback_run(db: Session, url: str, file_extension: str):
 
 
 def run(db: Session, url: str, file_extension: str):
+    logger.debug(f"Run on {url} with extension {extension}...")
     documents = fetch_documents(url, file_extension)
     update_documents(db, documents)
+    logger.debug(f"Ran on {url} with extension {extension}.")
 
 
 def update_documents(db: Session, documents: List[schemas.DocumentCreate]):
