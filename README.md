@@ -1,4 +1,10 @@
-# Python Microservice Template
+# Document Archiver
+
+This is a very quick and dirty hack.
+Do not expect anything.
+The source if aweful.
+
+
 
 Python microservice template, inspired by my Kotlin based microservice
 template https://github.com/debuglevel/greeting-microservice, but with way less enthusiasm; and I'm not too sure that
