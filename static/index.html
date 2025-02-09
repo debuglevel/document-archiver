@@ -35,29 +35,29 @@
         Please use them only for research purposes.
     </p>
 
-    <div class="table-responsive">
-        <table class="table-hover" v-if="sortedDocuments">
-            <thead>
-            <tr>
-                <th>File name</th>
-                <th>Title</th>
-                <th>Created on</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="(item, idx) in sortedDocuments">
-                <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
+    <table class="table" v-if="sortedDocuments">
+        <thead>
+        <tr>
+            <th scope="col">File name</th>
+            <th scope="col">Title</th>
+            <th scope="col">Created on</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(item, idx) in sortedDocuments">
+            <td><a v-bind:href="'../documents_download/'+item.id">{{ item.filename }}</a></td>
 
-                <td>{{ item.title }}</td>
+            <td>{{ item.title }}</td>
 
-                <!-- sv-SE looks like ISO 8601 -->
-                <td>{{ new Date(item.pdf_creation_datetime).toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' }) }}</td>
+            <!-- sv-SE looks like ISO 8601 -->
+            <td>{{ new Date(item.pdf_creation_datetime).toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit',
+                day: '2-digit' }) }}
+            </td>
 
-                <!-- <td>{{item.id}}</td> -->
-            </tr>
-            </tbody>
-        </table>
-    </div>
+            <!-- <td>{{item.id}}</td> -->
+        </tr>
+        </tbody>
+    </table>
 </div>
 
 <script type="module">
