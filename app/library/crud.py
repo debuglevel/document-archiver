@@ -38,16 +38,23 @@ def create_document(database: Session, document: schemas.DocumentCreate):
 def get_document(database: Session, document_id: int):
     logger.debug(f"Getting document with ID {document_id}...")
 
-    document = database.query(models.Document).filter(models.Document.id == document_id).first()
+    document = (database
+                .query(models.Document)
+                .filter(models.Document.id == document_id)
+                .first())
 
-    logger.debug(f"Got document {document}.")
+    logger.debug(f"Got document with ID {document_id}.")
     return document
 
 
 def get_documents(database: Session, skip: int = 0, limit: int = 1000) -> List[models.Document]:
     logger.debug(f"Getting documents...")
 
-    documents = database.query(models.Document).offset(skip).limit(limit).all()
+    documents = (database
+                 .query(models.Document)
+                 .offset(skip)
+                 .limit(limit)
+                 .all())
 
     logger.debug(f"Got documents")
     return documents
