@@ -68,9 +68,9 @@ def read_documents(document_id: int, database: Session = Depends(get_database)):
     return database_document
 
 
-@fastapi.get("/documents_download/{documents_id}")
-def read_documents(document_id: int, database: Session = Depends(get_database)):
-    logger.debug(f"Received GET request on /documents_download/{document_id}")
+@fastapi.get("/documents_download/{document_id}")
+def download_document(document_id: int, database: Session = Depends(get_database)):
+    logger.debug(f"Received GET request on /documents_download/{document_id}...")
 
     database_document: models.Document = crud.get_document(database, document_id=document_id)
 
