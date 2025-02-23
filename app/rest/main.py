@@ -49,15 +49,15 @@ async def get_health_async():
 
 
 @fastapi.get("/documents/", response_model=List[schemas.DocumentGet])
-def read_documents(skip: int = 0, limit: int = 1000, database: Session = Depends(get_database)):
-    logger.debug("Received GET request on /documents")
+def get_documents(skip: int = 0, limit: int = 1000, database: Session = Depends(get_database)):
+    logger.debug("Received GET request on /documents...")
     documents = crud.get_documents(database, skip=skip, limit=limit)
     return documents
 
 
 @fastapi.get("/documents/{document_id}", response_model=schemas.DocumentGet)
-def read_documents(document_id: int, database: Session = Depends(get_database)):
-    logger.debug(f"Received GET request on /documents/{document_id}")
+def get_document(document_id: int, database: Session = Depends(get_database)):
+    logger.debug(f"Received GET request on /documents/{document_id}...")
 
     database_document = crud.get_document(database, document_id=document_id)
 
