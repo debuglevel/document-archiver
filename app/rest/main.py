@@ -103,7 +103,7 @@ def check_documents() -> None:
     # TODO: Calling my own HTTP API instead.
     from fastapi.testclient import TestClient
     client = TestClient(fastapi)
-    client.get("/documents_manual_trigger")
+    client.get("/documents_manual_trigger/")
 
 
 def main():
